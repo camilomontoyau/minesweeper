@@ -7,18 +7,18 @@ const gameSchema = new Schema(
   {
     width: {
       type: Number,
-      required: [true, 'Width is required.']
+      default: 3
     },
     height: {
       type: Number,
-      required: [true, 'Height is required.']
+      default: 3
     },
     mines: {
       type: Number,
-      required: [true, 'Mines is required.'],
-      min: 1
+      default: 2,
+      min: 2
     },
-    board: [[cell]],
+    board: Array,
     state: {
       type: String,
       enum: ['paused', 'started', 'won', 'lost'],
@@ -32,36 +32,28 @@ const gameSchema = new Schema(
   }
 );
 
-const buildBoard = game => {
-  let board = [];
-
-  for (let row = 0; row < game.width; row++) {
-    for (let col = 0; col < game.height; col++) {}
-  }
-
-  return board;
-};
-
 function createBoard(game) {
   let board = [];
-  for (let row = 0; row < game.width; row++) {
+  for (let x = 0; x < game.width; x++) {
     board.push([]);
-    for (let col = 0; col < game.height; col++) {
-      board[row][col] = new Cell();
+    for (let y = 0; y < game.height; y++) {
+      board[x][y] = new Cell();
     }
   }
   return board;
 }
 
+let minesCoordinates = [];
 function insertMines(game) {
   let totalMines = game.mines;
-  let rowIndex = null;
-  let colIndex = null;
+  let xIndex = null;
+  let yIndex = null;
   do {
-    rowIndex = randomNumber(game.width);
-    colIndex = randomNumber(game.height);
-    if (!!game.board[rowIndex][colIndex].mine) {
-      game.board[rowIndex][colIndex].mine = true;
+    xIndex = randomNumber(game.width);
+    yIndex = randomNumber(game.height);
+    if (!game.board[xIndex][yIndex].mine) {
+      game.board[xIndex][yIndex].mine = true;
+      minesCoordinates.push({ xIndex, yIndex });
       totalMines--;
     }
   } while (totalMines > 0);
@@ -69,15 +61,57 @@ function insertMines(game) {
 }
 
 function insertMinesAround(game) {
-  throw new Error('missing insertMinesAround');
+  minesCoordinates.forEach(singleCoordinate => {
+    /* 
+      --------------
+      |a|    b   |c|
+      -------------
+      |d|  mine  |e|
+      --------------
+      |f|    g   |h|
+      -------------- 
+    */
+    game = addMinesAround(singleCoordinate, game);
+  });
+  return game.board;
 }
+
+const addMinesAround = (singleCoordinate, game) => {
+  const { xIndex, yIndex } = singleCoordinate;
+  const neighboursCoordinates = [
+    { x: xIndex - 1, y: yIndex - 1 },
+    { x: xIndex - 1, y: yIndex },
+    { x: xIndex - 1, y: yIndex + 1 },
+    { x: xIndex, y: yIndex - 1 },
+    { x: xIndex, y: yIndex + 1 },
+    { x: xIndex + 1, y: yIndex - 1 },
+    { x: xIndex + 1, y: yIndex },
+    { x: xIndex + 1, y: yIndex + 1 }
+  ];
+
+  neighboursCoordinates.forEach(singleNeighbourCoordinate => {
+    const xx = singleNeighbourCoordinate.x;
+    const yy = singleNeighbourCoordinate.y;
+    if (
+      xx >= 0 &&
+      yy >= 0 &&
+      xx < game.width &&
+      yy < game.height &&
+      !game.board[xx][yy].mine
+    ) {
+      game.board[xx][yy].minesAround++;
+    }
+  });
+  return game;
+};
 
 const randomNumber = max => Math.floor(Math.random() * max);
 
 gameSchema.pre('save', function(next) {
-  if (!this.board) {
+  if (!!this.board && !this.board.length) {
     this.board = createBoard(this);
     this.board = insertMines(this);
+    this.board = insertMinesAround(this);
   }
   next();
 });

@@ -4,11 +4,19 @@ const express = require('express');
 const server = express();
 const mongoose = require('mongoose');
 
+const Game = require('./models/game');
+
 const bodyParser = require('body-parser');
 server.use(bodyParser.urlencoded({ extended: false }));
 server.use(bodyParser.json());
 
-server.get('/', (req, res) => res.send('hello minesweeper'));
+server.get('/', (req, res) => {
+  const game = new Game({ owner: 'Camilo' });
+  game.save((err, createdGame) => {
+    if (err) throw err;
+    return res.json(createdGame);
+  });
+});
 
 mongoose.connect(
   process.env.URLDB,
