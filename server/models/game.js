@@ -15,7 +15,8 @@ const gameSchema = new Schema(
     },
     mines: {
       type: Number,
-      required: [true, 'Mines is required.']
+      required: [true, 'Mines is required.'],
+      min: 1
     },
     board: [[cell]],
     state: {
@@ -52,17 +53,31 @@ function createBoard(game) {
   return board;
 }
 
-function insertMines(board) {
-  throw new Error('missing insertMines');
+function insertMines(game) {
+  let totalMines = game.mines;
+  let rowIndex = null;
+  let colIndex = null;
+  do {
+    rowIndex = randomNumber(game.width);
+    colIndex = randomNumber(game.height);
+    if (!!game.board[rowIndex][colIndex].mine) {
+      game.board[rowIndex][colIndex].mine = true;
+      totalMines--;
+    }
+  } while (totalMines > 0);
+  return game.board;
 }
 
-function insertMinesAround(board) {
+function insertMinesAround(game) {
   throw new Error('missing insertMinesAround');
 }
+
+const randomNumber = max => Math.floor(Math.random() * max);
 
 gameSchema.pre('save', function(next) {
   if (!this.board) {
     this.board = createBoard(this);
+    this.board = insertMines(this);
   }
   next();
 });
