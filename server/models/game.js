@@ -1,16 +1,7 @@
 const mongoose = require('mongoose');
+const cell = require('./cell');
 
 const { Schema } = mongoose;
-
-const cellSchema = new Schema({
-  mine: { type: Boolean, default: false },
-  minesAround: { type: Number, default: 0 },
-  state: {
-    type: String,
-    enum: ['opened', 'closed', 'flagged', 'question'],
-    default: 'closed'
-  }
-});
 
 const gameSchema = new Schema(
   {
@@ -26,7 +17,7 @@ const gameSchema = new Schema(
       type: Number,
       required: [true, 'Mines is required.']
     },
-    board: [[cellSchema]],
+    board: [[cell]],
     state: {
       type: String,
       enum: ['paused', 'started', 'won', 'lost'],
