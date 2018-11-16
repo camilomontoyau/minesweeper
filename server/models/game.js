@@ -78,32 +78,29 @@ function insertMinesAround(game) {
 
 const addMinesAround = (singleCoordinate, game) => {
   const { xIndex, yIndex } = singleCoordinate;
-  const neighboursCoordinates = [
-    { x: xIndex - 1, y: yIndex - 1 },
-    { x: xIndex - 1, y: yIndex },
-    { x: xIndex - 1, y: yIndex + 1 },
-    { x: xIndex, y: yIndex - 1 },
-    { x: xIndex, y: yIndex + 1 },
-    { x: xIndex + 1, y: yIndex - 1 },
-    { x: xIndex + 1, y: yIndex },
-    { x: xIndex + 1, y: yIndex + 1 }
-  ];
 
-  neighboursCoordinates.forEach(singleNeighbourCoordinate => {
-    const xx = singleNeighbourCoordinate.x;
-    const yy = singleNeighbourCoordinate.y;
-    if (
-      xx >= 0 &&
-      yy >= 0 &&
-      xx < game.width &&
-      yy < game.height &&
-      !game.board[xx][yy].mine
-    ) {
-      game.board[xx][yy].minesAround++;
+  neighboursCoordinates(xIndex, yIndex).forEach(singleNeighbourCoordinate => {
+    const { x, y } = singleNeighbourCoordinate;
+    if (doesCellExist(x, y, game) && !game.board[x][y].mine) {
+      game.board[x][y].minesAround++;
     }
   });
   return game;
 };
+
+const doesCellExist = (x, y, game) =>
+  x >= 0 && y >= 0 && x < game.width && y < game.height;
+
+const neighboursCoordinates = (xIndex, yIndex) => [
+  { x: xIndex - 1, y: yIndex - 1 },
+  { x: xIndex - 1, y: yIndex },
+  { x: xIndex - 1, y: yIndex + 1 },
+  { x: xIndex, y: yIndex - 1 },
+  { x: xIndex, y: yIndex + 1 },
+  { x: xIndex + 1, y: yIndex - 1 },
+  { x: xIndex + 1, y: yIndex },
+  { x: xIndex + 1, y: yIndex + 1 }
+];
 
 const randomNumber = max => Math.floor(Math.random() * max);
 
@@ -115,5 +112,14 @@ gameSchema.pre('save', function(next) {
   }
   next();
 });
+
+gameSchema.methods.openCell = function({ x, y }) {
+  if (doesCellExist(x, y, this) && this.board[x][y].state === 'closed') {
+    let originCell = this.board[x][y];
+    if (!!originCell.mine) {
+      this.state = 'lost';
+    }
+  }
+};
 
 module.exports = mongoose.model('Game', gameSchema);

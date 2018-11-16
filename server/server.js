@@ -16,14 +16,22 @@ server.get('/', (req, res) => {
 server.get('/games', (req, res) => {
   Game.find(req.query, (err, games) => {
     if (err) return errorHandler(res, err);
-    return res.status(200).json(games);
+    return res.status(200).json(games.map(cleanCells));
   });
 });
 
 server.get('/games/:id', (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     if (err) return errorHandler(res, err);
-    return res.status(200).json(game);
+    return res.status(200).json(cleanCells(game));
+  });
+});
+
+server.put('/games/:id/cell/:x/:y', (req, res) => {
+  Game.findById(req.params.id, (err, game) => {
+    if (err) return errorHandler(res, err);
+
+    return res.status(200).json(cleanCells(game));
   });
 });
 
