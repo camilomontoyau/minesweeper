@@ -30,6 +30,7 @@ server.get('/games/:id', (req, res) => {
 server.put('/games/:id/cell/:x/:y', (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     if (err) return errorHandler(res, err);
+    if (game.state === 'lost') return res.status(200).json(game);
     const newGame = game
       .openCell({
         x: Number(req.params.x),
