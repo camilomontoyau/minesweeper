@@ -30,8 +30,22 @@ server.get('/games/:id', (req, res) => {
 server.put('/games/:id/cell/:x/:y', (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     if (err) return errorHandler(res, err);
-
-    return res.status(200).json(cleanCells(game));
+    const newGame = game
+      .openCell({
+        x: Number(req.params.x),
+        y: Number(req.params.y)
+      })
+      .toObject();
+    Game.findByIdAndUpdate(
+      game._id,
+      { $set: { ...newGame } },
+      { new: true },
+      (err2, savedGame) => {
+        if (err2) return errorHandler(res, err2);
+        if (savedGame.state === 'lost') return res.status(200).json(savedGame);
+        return res.status(200).json(cleanCells(savedGame));
+      }
+    );
   });
 });
 
