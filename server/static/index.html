@@ -22,7 +22,7 @@
       }
 
       .game__board {
-        width: 100%;
+        width: 90%;
         margin: auto;
         height: 90%;
       }
@@ -30,11 +30,15 @@
       .game__board__row {
         display: flex;
         flex-direction: row;
-        width: 100%;
+        width: 87%;
       }
 
       .game__board__row__cell {
-        border: 1px solid black;
+      }
+
+      .game__board__row__cell img {
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
@@ -50,6 +54,36 @@
     <script type="text/babel">
       const app = document.getElementById('app');
 
+      const BoardRow = ({ rowIndex = 0, width = 1, height = 1, row = [] }) => (
+        <div className="game__board__row">
+          {row.map((cell, cellIndex) => (
+            <Cell
+              key={`cell${rowIndex}${cellIndex}`}
+              {...cell}
+              width={width}
+              height={height}
+            />
+          ))}
+        </div>
+      );
+
+      const Cell = ({
+        mine = false,
+        minesAround = 0,
+        state = 'closed',
+        width = 1,
+        height = 1
+      }) => (
+        <div
+          className="game__board__row__cell"
+          style={{
+            width: `${100 / width}%`,
+            height: `${100 / height}%`
+          }}
+        >
+          {!!mine ? <img src="/mine.svg" /> : <img src={`/${state}.svg`} />}
+        </div>
+      );
       const Game = ({
         board = [],
         createdAt = '',
@@ -67,20 +101,14 @@
         return (
           <div className="game">
             <div className="game__board">
-              {board.map((row = []) => (
-                <div className="game__board__row">
-                  {row.map(cell => (
-                    <div
-                      className="game__board__row__cell"
-                      style={{
-                        width: `${100 / width}%`,
-                        height: `${100 / height}%`
-                      }}
-                    >
-                      {_.get(cell, 'state', '')}
-                    </div>
-                  ))}
-                </div>
+              {board.map((row = [], rowIndex) => (
+                <BoardRow
+                  key={`row${rowIndex}`}
+                  row={row}
+                  rowIndex={rowIndex}
+                  width={width}
+                  height={height}
+                />
               ))}
             </div>
           </div>
