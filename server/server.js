@@ -131,7 +131,10 @@ function cleanCells(game) {
   const responseObject = game.toObject();
   responseObject.board = responseObject.board.map(row => {
     return row.map(cell => {
-      const { state } = cell;
+      const { state, minesAround } = cell;
+      if (cell.state === 'opened') {
+        return { state, minesAround };
+      }
       return { state };
     });
   });
