@@ -1,0 +1,125 @@
+<html>
+  <head>
+    <title>Minesweeper</title>
+    <meta charset="UTF-8" />
+    <style>
+      th,
+      td {
+        border: 1px solid black;
+        padding: 10px 20px;
+        align-content: center;
+        text-align: center;
+      }
+      table {
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.js"></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/react@16.6.1/umd/react.development.js"
+    ></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+    <script type="text/babel">
+      const app = document.getElementById('app');
+
+      const GameRow = ({ game = {}, continueGame = () => {} }) => {
+        if (!game.board && !game.board.length) return false;
+        return (
+          <tr>
+            <td>{_.get(game, 'owner', '')}</td>
+            <td>{_.get(game, 'state', '')}</td>
+            <td>
+              {_.get(game, 'width', '')} X {_.get(game, 'height', '')}
+            </td>
+            <td>
+              {!!game._id ? (
+                <button onClick={() => continueGame(game._id)}>continue</button>
+              ) : (
+                ''
+              )}
+            </td>
+          </tr>
+        );
+      };
+
+      const GameListHead = () => (
+        <thead>
+          <tr>
+            <th>owner</th>
+            <th>state</th>
+            <th>dimensions</th>
+            <th />
+          </tr>
+        </thead>
+      );
+
+      const GameList = ({ games = [], continueGame = () => {} }) => (
+        <table>
+          <GameListHead />
+          <tbody>
+            {!!games.length ? (
+              games.map(game => (
+                <GameRow
+                  key={_.get(game, '_id', '')}
+                  game={game}
+                  continueGame={continueGame}
+                />
+              ))
+            ) : (
+              <tr>
+                <td>there are no games to show</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      );
+
+      class Container extends React.Component {
+        state = {
+          clicks: 0,
+          games: [],
+          currentGame: null
+        };
+
+        componentDidMount() {
+          this.getGames();
+        }
+
+        continueGame = async (gameId = null) => {
+          try {
+            if (!!gameId) {
+              const fetchGame = await fetch(`/games/${gameId}`);
+              const currentGame = await fetchGame.json();
+              this.setState({ currentGame });
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        getGames = async () => {
+          try {
+            const fetchGames = await fetch('/games');
+            const games = await fetchGames.json();
+            this.setState({ games });
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        render() {
+          const { games, currentGame } = this.state;
+          if (currentGame) return <div>I'm a game</div>;
+          return <GameList games={games} continueGame={this.continueGame} />;
+        }
+      }
+      const text = "I'm a text";
+      ReactDOM.render(<Container />, app);
+    </script>
+  </body>
+</html>

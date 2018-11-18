@@ -9,9 +9,7 @@ const Game = require('./models/game');
 server.use(bodyParser.urlencoded({ extended: false }));
 server.use(bodyParser.json());
 
-server.get('/', (req, res) => {
-  return res.status(200).json('welcome to minesweeper!');
-});
+server.get('/', express.static(`${__dirname}/static`));
 
 server.get('/games', (req, res) => {
   Game.find(req.query, (err, games) => {
