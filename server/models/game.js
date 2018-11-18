@@ -118,7 +118,6 @@ gameSchema.pre('save', function preSaveCallback(next) {
     this.board = insertMines(this);
     this.board = insertMinesAround(this);
   }
-  console.log('preSave', JSON.stringify(this));
   next();
 });
 

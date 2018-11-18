@@ -145,3 +145,5 @@ function flagCell({ req, res, game, state }) {
     }
   );
 }
+
+module.exports = server;

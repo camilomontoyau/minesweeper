@@ -4,7 +4,7 @@
   "description": "",
   "main": "server/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --exit",
     "start": "nodemon server/server.js"
   },
   "repository": {
@@ -24,6 +24,9 @@
     "mongoose": "^5.3.12"
   },
   "devDependencies": {
-    "nodemon": "^1.18.6"
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "nodemon": "^1.18.6",
+    "supertest": "^3.3.0"
   }
 }
