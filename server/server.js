@@ -28,25 +28,36 @@ server.get('/games/:id', (req, res) => {
 });
 
 server.put('/games/:id/cell/:x/:y', (req, res) => {
+  if (!req.body) {
+    return errorHandler(res, {
+      name: 'ValidationError',
+      message: 'body is required'
+    });
+  }
+
+  if (!req.body.state) {
+    return errorHandler(res, {
+      name: 'ValidationError',
+      message: 'body.state is required'
+    });
+  }
+
+  const { state } = req.body;
   Game.findById(req.params.id, (err, game) => {
     if (err) return errorHandler(res, err);
     if (game.state === 'lost') return res.status(200).json(game);
-    const newGame = game
-      .openCell({
-        x: Number(req.params.x),
-        y: Number(req.params.y)
-      })
-      .toObject();
-    Game.findByIdAndUpdate(
-      game._id,
-      { $set: { ...newGame } },
-      { new: true },
-      (err2, savedGame) => {
-        if (err2) return errorHandler(res, err2);
-        if (savedGame.state === 'lost') return res.status(200).json(savedGame);
-        return res.status(200).json(cleanCells(savedGame));
-      }
-    );
+    switch (state) {
+      case 'opened':
+        return openCell(req, res, game);
+      case 'flagged':
+      case 'question':
+        return flagCell({ req, res, game, state });
+      default:
+        return errorHandler(res, {
+          name: 'ValidationError',
+          message: 'invalid body.state'
+        });
+    }
   });
 });
 
@@ -94,4 +105,43 @@ function cleanCells(game) {
     });
   });
   return responseObject;
+}
+
+function openCell(req, res, game) {
+  const newGame = game
+    .openCell({
+      x: Number(req.params.x),
+      y: Number(req.params.y)
+    })
+    .toObject();
+  Game.findByIdAndUpdate(
+    game._id,
+    { $set: { ...newGame } },
+    { new: true },
+    (err2, savedGame) => {
+      if (err2) return errorHandler(res, err2);
+      if (savedGame.state === 'lost') return res.status(200).json(savedGame);
+      return res.status(200).json(cleanCells(savedGame));
+    }
+  );
+}
+
+function flagCell({ req, res, game, state }) {
+  const newGame = game
+    .flagCell({
+      x: Number(req.params.x),
+      y: Number(req.params.y),
+      state
+    })
+    .toObject();
+  Game.findByIdAndUpdate(
+    game._id,
+    { $set: { ...newGame } },
+    { new: true },
+    (err2, savedGame) => {
+      if (err2) return errorHandler(res, err2);
+      if (savedGame.state === 'lost') return res.status(200).json(savedGame);
+      return res.status(200).json(cleanCells(savedGame));
+    }
+  );
 }

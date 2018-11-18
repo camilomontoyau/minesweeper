@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const Cell = require('./cell');
 
 const { Schema } = mongoose;
 
@@ -134,6 +133,16 @@ gameSchema.methods.openCell = function({ x, y }) {
       return this;
     }
     propagateCellOpening({ x, y }, this);
+    if (hasWon(this)) {
+      this.state = 'won';
+    }
+  }
+  return this;
+};
+
+gameSchema.methods.flagCell = function({ x, y, state }) {
+  if (doesCellExist(x, y, this) && this.board[x][y].state === 'closed') {
+    this.board[x][y].state = state;
   }
   return this;
 };
