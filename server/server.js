@@ -21,6 +21,8 @@ server.get('/games', (req, res) => {
 server.get('/games/:id', (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     if (err) return errorHandler(res, err);
+    if (game.state === 'lost' || game.state === 'won')
+      return res.status(200).json(game);
     return res.status(200).json(cleanCells(game));
   });
 });
@@ -43,7 +45,8 @@ server.put('/games/:id/cell/:x/:y', (req, res) => {
   const { state } = req.body;
   Game.findById(req.params.id, (err, game) => {
     if (err) return errorHandler(res, err);
-    if (game.state === 'lost') return res.status(200).json(game);
+    if (game.state === 'lost' || game.state === 'won')
+      return res.status(200).json(game);
     switch (state) {
       case 'opened':
         return openCell(req, res, game);
