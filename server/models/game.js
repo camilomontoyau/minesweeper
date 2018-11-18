@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const flattenDeep = require('lodash.flattendeep');
 
 const { Schema } = mongoose;
 
@@ -138,6 +139,15 @@ gameSchema.methods.openCell = function({ x, y }) {
   }
   return this;
 };
+
+function hasWon(game) {
+  const { board, mines } = game;
+  const expectedToWin = game.width * game.height - mines;
+  return (
+    flattenDeep(board).filter(cell => cell.state === 'opened').length ===
+    expectedToWin
+  );
+}
 
 gameSchema.methods.flagCell = function({ x, y, state }) {
   if (doesCellExist(x, y, this) && this.board[x][y].state === 'closed') {
