@@ -11,7 +11,8 @@
         text-align: center;
       }
 
-      table {
+      table,
+      .newGameBtn {
         margin: auto;
       }
 
@@ -61,6 +62,46 @@
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
     <script type="text/babel">
       const app = document.getElementById('app');
+
+      const NewGame = ({
+        onNewGame = () => {},
+        newGame = {},
+        newGameFieldsHandler = () => {}
+      }) => (
+        <div className="newGameForm">
+          <input
+            name="mines"
+            id="mines"
+            type="number"
+            value={_.get(newGame, 'mines', 0)}
+            onChange={newGameFieldsHandler}
+          />
+          <input
+            name="width"
+            id="width"
+            type="number"
+            value={_.get(newGame, 'width', 0)}
+            onChange={newGameFieldsHandler}
+          />
+          <input
+            name="height"
+            id="height"
+            type="number"
+            value={_.get(newGame, 'height', 0)}
+            onChange={newGameFieldsHandler}
+          />
+          <input
+            id="owner"
+            name="owner"
+            type="text"
+            value={_.get(newGame, 'owner', '')}
+            onChange={newGameFieldsHandler}
+          />
+          <button className="newGameBtn" onClick={onNewGame}>
+            New Game
+          </button>
+        </div>
+      );
 
       const BoardRow = ({
         rowIndex = 0,
@@ -137,12 +178,20 @@
         updatedAt = '',
         width = 0,
         _id = '',
-        onCellClick = () => {}
+        onCellClick = () => {},
+        onNewGame = () => {},
+        newGameFieldsHandler = () => {},
+        newGame = {}
       }) => {
         if (!board || !board.length)
           return <h1>ha ocurrido un error creando el tablero</h1>;
         return (
           <div className="game">
+            <NewGame
+              onNewGame={onNewGame}
+              newGameFieldsHandler={newGameFieldsHandler}
+              newGame={newGame}
+            />
             <div className="game__board">
               {board.map((row = [], rowIndex) => (
                 <BoardRow
@@ -162,7 +211,7 @@
       };
 
       const GameRow = ({ game = {}, continueGame = () => {} }) => {
-        if (!game.board && !game.board.length) return false;
+        if (!game.board || !game.board.length) return false;
         return (
           <tr>
             <td>{_.get(game, 'owner', '')}</td>
@@ -171,7 +220,13 @@
               {_.get(game, 'width', '')} X {_.get(game, 'height', '')}
             </td>
             <td>
-              {!!(game._id && game.board && game.board.length) ? (
+              {!!(
+                game._id &&
+                game.board &&
+                game.board.length &&
+                game.state !== 'won' &&
+                game.state !== 'lost'
+              ) ? (
                 <button onClick={() => continueGame(game._id)}>continue</button>
               ) : (
                 ''
@@ -192,32 +247,46 @@
         </thead>
       );
 
-      const GameList = ({ games = [], continueGame = () => {} }) => (
-        <table>
-          <GameListHead />
-          <tbody>
-            {!!games.length ? (
-              games.map(game => (
-                <GameRow
-                  key={_.get(game, '_id', '')}
-                  game={game}
-                  continueGame={continueGame}
-                />
-              ))
-            ) : (
-              <tr>
-                <td>there are no games to show</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      const GameList = ({
+        games = [],
+        continueGame = () => {},
+        onNewGame = () => {},
+        newGameFieldsHandler = () => {},
+        newGame = {}
+      }) => (
+        <div>
+          <NewGame
+            onNewGame={onNewGame}
+            newGameFieldsHandler={newGameFieldsHandler}
+            newGame={newGame}
+          />
+          <table>
+            <GameListHead />
+            <tbody>
+              {!!games.length ? (
+                games.map(game => (
+                  <GameRow
+                    key={_.get(game, '_id', '')}
+                    game={game}
+                    continueGame={continueGame}
+                  />
+                ))
+              ) : (
+                <tr>
+                  <td>there are no games to show</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       );
 
       class Container extends React.Component {
         state = {
           clicks: 0,
           games: [],
-          currentGame: null
+          currentGame: null,
+          newGame: { mines: 2, width: 3, height: 3, owner: 'john doe' }
         };
 
         componentDidMount() {
@@ -252,10 +321,6 @@
           cellIndex = null,
           _id = ''
         }) => {
-          console.log('rowIndex', rowIndex);
-          console.log('cellIndex', cellIndex);
-          console.log('event', event);
-          console.log('event.type', event.type);
           let state = 'opened';
           if (event.type === 'contextmenu') state = 'flagged';
           if (!!_id && rowIndex >= 0 && cellIndex >= 0) {
@@ -276,11 +341,51 @@
           }
         };
 
+        onNewGame = async event => {
+          const { newGame } = this.state;
+          this.setState({ currentGame: null }, async () => {
+            const updateResponse = await fetch(`/games`, {
+              method: 'post',
+              headers: new Headers({
+                'Content-Type': 'application/json'
+              }),
+              body: JSON.stringify(newGame)
+            });
+            const currentGame = await updateResponse.json();
+            this.setState({ currentGame });
+          });
+        };
+
+        newGameFieldsHandler = event => {
+          let newGame = { ...this.state.newGame };
+          newGame[event.target.name] = event.target.value;
+
+          this.setState({
+            newGame
+          });
+        };
+
         render() {
-          const { games, currentGame } = this.state;
+          const { games, currentGame, newGame } = this.state;
           if (currentGame)
-            return <Game {...currentGame} onCellClick={this.onCellClick} />;
-          return <GameList games={games} continueGame={this.continueGame} />;
+            return (
+              <Game
+                {...currentGame}
+                onCellClick={this.onCellClick}
+                newGameFieldsHandler={this.newGameFieldsHandler}
+                newGame={newGame}
+                onNewGame={this.onNewGame}
+              />
+            );
+          return (
+            <GameList
+              games={games}
+              continueGame={this.continueGame}
+              newGameFieldsHandler={this.newGameFieldsHandler}
+              newGame={newGame}
+              onNewGame={this.onNewGame}
+            />
+          );
         }
       }
       const text = "I'm a text";
