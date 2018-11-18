@@ -34,6 +34,14 @@
       }
 
       .game__board__row__cell {
+        justify-content: center;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .game__board__row__cell span {
+        font-size: 40px;
+        margin: auto;
       }
 
       .game__board__row__cell img {
@@ -54,7 +62,15 @@
     <script type="text/babel">
       const app = document.getElementById('app');
 
-      const BoardRow = ({ rowIndex = 0, width = 1, height = 1, row = [] }) => (
+      const BoardRow = ({
+        rowIndex = 0,
+        width = 1,
+        height = 1,
+        row = [],
+        onCellClick = () => {},
+        gameId = '',
+        gameState = ''
+      }) => (
         <div className="game__board__row">
           {row.map((cell, cellIndex) => (
             <Cell
@@ -62,6 +78,11 @@
               {...cell}
               width={width}
               height={height}
+              cellIndex={cellIndex}
+              rowIndex={rowIndex}
+              onCellClick={onCellClick}
+              gameId={gameId}
+              gameState={gameState}
             />
           ))}
         </div>
@@ -72,18 +93,39 @@
         minesAround = 0,
         state = 'closed',
         width = 1,
-        height = 1
+        height = 1,
+        onCellClick = () => {},
+        cellIndex = null,
+        rowIndex = null,
+        _id = '',
+        gameId = '',
+        gameState = ''
       }) => (
-        <div
+        <a
           className="game__board__row__cell"
           style={{
             width: `${100 / width}%`,
             height: `${100 / height}%`
           }}
+          onClick={event => {
+            if (gameState === 'won' || gameState === 'lost') return;
+            onCellClick({ event, rowIndex, cellIndex, _id: gameId });
+          }}
+          onContextMenu={event => {
+            if (gameState === 'won' || gameState === 'lost') return;
+            onCellClick({ event, rowIndex, cellIndex, _id: gameId });
+          }}
         >
-          {!!mine ? <img src="/mine.svg" /> : <img src={`/${state}.svg`} />}
-        </div>
+          {!!mine && state === 'opened' ? (
+            <img src="/mine.svg" />
+          ) : state !== 'opened' ? (
+            <img src={`/${state}.svg`} />
+          ) : (
+            <span>{!!minesAround ? minesAround : ''}</span>
+          )}
+        </a>
       );
+
       const Game = ({
         board = [],
         createdAt = '',
@@ -94,7 +136,8 @@
         time = 0,
         updatedAt = '',
         width = 0,
-        _id = ''
+        _id = '',
+        onCellClick = () => {}
       }) => {
         if (!board || !board.length)
           return <h1>ha ocurrido un error creando el tablero</h1>;
@@ -108,6 +151,9 @@
                   rowIndex={rowIndex}
                   width={width}
                   height={height}
+                  onCellClick={onCellClick}
+                  gameId={_id}
+                  gameState={state}
                 />
               ))}
             </div>
@@ -200,9 +246,40 @@
           }
         };
 
+        onCellClick = async ({
+          event = {},
+          rowIndex = null,
+          cellIndex = null,
+          _id = ''
+        }) => {
+          console.log('rowIndex', rowIndex);
+          console.log('cellIndex', cellIndex);
+          console.log('event', event);
+          console.log('event.type', event.type);
+          let state = 'opened';
+          if (event.type === 'contextmenu') state = 'flagged';
+          if (!!_id && rowIndex >= 0 && cellIndex >= 0) {
+            const updateResponse = await fetch(
+              `/games/${_id}/cell/${rowIndex}/${cellIndex}`,
+              {
+                method: 'put',
+                headers: new Headers({
+                  'Content-Type': 'application/json'
+                }),
+                body: JSON.stringify({
+                  state
+                })
+              }
+            );
+            const currentGame = await updateResponse.json();
+            this.setState({ currentGame });
+          }
+        };
+
         render() {
           const { games, currentGame } = this.state;
-          if (currentGame) return <Game {...currentGame} />;
+          if (currentGame)
+            return <Game {...currentGame} onCellClick={this.onCellClick} />;
           return <GameList games={games} continueGame={this.continueGame} />;
         }
       }
