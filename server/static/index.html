@@ -10,8 +10,31 @@
         align-content: center;
         text-align: center;
       }
+
       table {
         margin: auto;
+      }
+
+      .game {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .game__board {
+        width: 100%;
+        margin: auto;
+        height: 90%;
+      }
+
+      .game__board__row {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+      }
+
+      .game__board__row__cell {
+        border: 1px solid black;
       }
     </style>
   </head>
@@ -27,6 +50,43 @@
     <script type="text/babel">
       const app = document.getElementById('app');
 
+      const Game = ({
+        board = [],
+        createdAt = '',
+        height = 0,
+        mines = 0,
+        owner = '',
+        state = '',
+        time = 0,
+        updatedAt = '',
+        width = 0,
+        _id = ''
+      }) => {
+        if (!board || !board.length)
+          return <h1>ha ocurrido un error creando el tablero</h1>;
+        return (
+          <div className="game">
+            <div className="game__board">
+              {board.map((row = []) => (
+                <div className="game__board__row">
+                  {row.map(cell => (
+                    <div
+                      className="game__board__row__cell"
+                      style={{
+                        width: `${100 / width}%`,
+                        height: `${100 / height}%`
+                      }}
+                    >
+                      {_.get(cell, 'state', '')}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
       const GameRow = ({ game = {}, continueGame = () => {} }) => {
         if (!game.board && !game.board.length) return false;
         return (
@@ -37,7 +97,7 @@
               {_.get(game, 'width', '')} X {_.get(game, 'height', '')}
             </td>
             <td>
-              {!!game._id ? (
+              {!!(game._id && game.board && game.board.length) ? (
                 <button onClick={() => continueGame(game._id)}>continue</button>
               ) : (
                 ''
@@ -114,7 +174,7 @@
 
         render() {
           const { games, currentGame } = this.state;
-          if (currentGame) return <div>I'm a game</div>;
+          if (currentGame) return <Game {...currentGame} />;
           return <GameList games={games} continueGame={this.continueGame} />;
         }
       }
