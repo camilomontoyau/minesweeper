@@ -62,7 +62,37 @@ server.put('/games/:id/cell/:x/:y', (req, res) => {
 });
 
 server.post('/games', (req, res) => {
-  const game = new Game(req.body);
+  const { state, ...restProps } = req.body;
+  if (
+    !!restProps.mines &&
+    !!restProps.width &&
+    !!restProps.height &&
+    Number(restProps.mines) > Number(restProps.height) * Number(restProps.width)
+  ) {
+    return errorHandler(res, {
+      name: 'ValidationError',
+      message: `number of mines (${
+        restProps.mines
+      }) can not be higher than number cells (${Number(restProps.width) *
+        Number(restProps.height)})`
+    });
+  }
+
+  if (
+    !!restProps.mines &&
+    !restProps.width &&
+    !restProps.height &&
+    Number(restProps.mines) > 9
+  ) {
+    return errorHandler(res, {
+      name: 'ValidationError',
+      message: `number of mines (${
+        restProps.mines
+      }) can not be higher than number cells (9)`
+    });
+  }
+
+  const game = new Game({ ...restProps });
   game.save((err, createdGame) => {
     if (err) return errorHandler(res, err);
     return res.json(cleanCells(createdGame));
