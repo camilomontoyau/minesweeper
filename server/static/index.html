@@ -69,6 +69,7 @@
         newGameFieldsHandler = () => {}
       }) => (
         <div className="newGameForm">
+          <label htmlFor="mines">mines:</label>
           <input
             name="mines"
             id="mines"
@@ -76,6 +77,7 @@
             value={_.get(newGame, 'mines', 0)}
             onChange={newGameFieldsHandler}
           />
+          <label htmlFor="width">width:</label>
           <input
             name="width"
             id="width"
@@ -83,6 +85,7 @@
             value={_.get(newGame, 'width', 0)}
             onChange={newGameFieldsHandler}
           />
+          <label htmlFor="height">height:</label>
           <input
             name="height"
             id="height"
@@ -90,6 +93,7 @@
             value={_.get(newGame, 'height', 0)}
             onChange={newGameFieldsHandler}
           />
+          <label htmlFor="owner">owner:</label>
           <input
             id="owner"
             name="owner"
