@@ -187,7 +187,7 @@
         newGame = {}
       }) => {
         if (!board || !board.length)
-          return <h1>ha ocurrido un error creando el tablero</h1>;
+          return <h1>error trying to create the board, please try again</h1>;
         return (
           <div className="game">
             <NewGame
@@ -195,6 +195,10 @@
               newGameFieldsHandler={newGameFieldsHandler}
               newGame={newGame}
             />
+            {!!(state === 'won') && (
+              <h1>congratulations you've won the game</h1>
+            )}
+            {!!(state === 'lost') && <h1>Game over! try again</h1>}
             <div className="game__board">
               {board.map((row = [], rowIndex) => (
                 <BoardRow
