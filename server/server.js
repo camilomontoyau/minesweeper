@@ -154,7 +154,8 @@ function openCell(req, res, game) {
     { new: true },
     (err2, savedGame) => {
       if (err2) return errorHandler(res, err2);
-      if (savedGame.state === 'lost') return res.status(200).json(savedGame);
+      if (savedGame.state === 'lost' || savedGame.state === 'won')
+        return res.status(200).json(savedGame);
       return res.status(200).json(cleanCells(savedGame));
     }
   );
