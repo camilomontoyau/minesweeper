@@ -3,6 +3,10 @@
 [link to app](https://serene-lake-22151.herokuapp.com/)
 ![minesweeper](/images/minesweeper.gif)
 
+### open cells with click
+
+### flag cells with right click
+
 ## 1) create board before saving
 
 ![presave](/images/presave.jpg)
