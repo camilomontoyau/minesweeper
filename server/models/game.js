@@ -156,9 +156,13 @@ function hasWon(game) {
 gameSchema.methods.flagCell = function({ x, y, state }) {
   if (doesCellExist(x, y, this) && this.board[x][y].state === 'closed') {
     this.board[x][y].state = state;
-  }
-  if (
-    (doesCellExist(x, y, this) && this.board[x][y].state === 'flagged') ||
+  } else if (
+    doesCellExist(x, y, this) &&
+    this.board[x][y].state === 'flagged'
+  ) {
+    this.board[x][y].state = 'question';
+  } else if (
+    doesCellExist(x, y, this) &&
     this.board[x][y].state === 'question'
   ) {
     this.board[x][y].state = 'closed';
