@@ -12,10 +12,19 @@ server.use(bodyParser.json());
 server.get('/*', express.static(`${__dirname}/static`));
 
 server.get('/games', (req, res) => {
-  Game.find(req.query, (err, games) => {
-    if (err) return errorHandler(res, err);
-    return res.status(200).json(games.map(cleanCells));
-  });
+  Game.find(
+    req.query,
+    null,
+    {
+      sort: {
+        _id: -1
+      }
+    },
+    (err, games) => {
+      if (err) return errorHandler(res, err);
+      return res.status(200).json(games.map(cleanCells));
+    }
+  );
 });
 
 server.get('/games/:id', (req, res) => {
