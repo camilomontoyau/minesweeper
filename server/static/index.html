@@ -332,6 +332,7 @@
           cellIndex = null,
           _id = ''
         }) => {
+          event.preventDefault();
           let state = 'opened';
           if (event.type === 'contextmenu') state = 'flagged';
           if (!!_id && rowIndex >= 0 && cellIndex >= 0) {
