@@ -11,7 +11,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'develop';
 let urlDB = '';
 
 if (process.env.NODE_ENV === 'develop') {
-  urlDB = 'mongodb://localhost:27017/minesweeper';
+  urlDB = 'mongodb://localhost/minesweeper';
 } else {
   urlDB = process.env.MONGO_URI;
 }
