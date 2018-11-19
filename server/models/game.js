@@ -49,6 +49,7 @@ function createBoard(game) {
 
 let minesCoordinates = [];
 function insertMines(game) {
+  minesCoordinates = [];
   let totalMines = game.mines;
   let xIndex = null;
   let yIndex = null;
@@ -81,10 +82,14 @@ function insertMinesAround(game) {
 }
 
 const addMinesAround = (singleCoordinate, game) => {
-  const { xIndex, yIndex } = singleCoordinate;
+  let { xIndex, yIndex } = singleCoordinate;
+  xIndex = Number(xIndex);
+  yIndex = Number(yIndex);
 
   neighboursCoordinates(xIndex, yIndex).forEach(singleNeighbourCoordinate => {
-    const { x, y } = singleNeighbourCoordinate;
+    let { x, y } = singleNeighbourCoordinate;
+    x = Number(x);
+    y = Number(y);
     if (doesCellExist(x, y, game) && !game.board[x][y].mine) {
       game.board[x][y].minesAround++;
     }
