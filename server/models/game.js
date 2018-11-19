@@ -129,13 +129,13 @@ gameSchema.methods.openCell = function({ x, y }) {
       this.state = 'lost';
       return this;
     }
+    if (hasWon(this)) {
+      this.state = 'won';
+    }
     if (!!this.board[x][y].minesAround) {
       return this;
     }
     propagateCellOpening({ x, y }, this);
-    if (hasWon(this)) {
-      this.state = 'won';
-    }
   }
   return this;
 };
@@ -143,15 +143,20 @@ gameSchema.methods.openCell = function({ x, y }) {
 function hasWon(game) {
   const { board, mines } = game;
   const expectedToWin = game.width * game.height - mines;
-  return (
-    flattenDeep(board).filter(cell => cell.state === 'opened').length ===
-    expectedToWin
-  );
+  const openedCells = flattenDeep(board).filter(cell => cell.state === 'opened')
+    .length;
+  return openedCells === expectedToWin;
 }
 
 gameSchema.methods.flagCell = function({ x, y, state }) {
   if (doesCellExist(x, y, this) && this.board[x][y].state === 'closed') {
     this.board[x][y].state = state;
+  }
+  if (
+    (doesCellExist(x, y, this) && this.board[x][y].state === 'flagged') ||
+    this.board[x][y].state === 'question'
+  ) {
+    this.board[x][y].state = 'closed';
   }
   return this;
 };
